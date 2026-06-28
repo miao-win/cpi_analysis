@@ -305,7 +305,7 @@ class DataVisualizer:
         filename: Optional[str] = None
     ) -> str:
         logger.info("Fetching all index data for export...")
-        df = self.get_index_data(start_date=start_date, end_date=end_date)
+        df = self.get_index_data(index_level=None, start_date=start_date, end_date=end_date)
 
         if format.lower() == 'csv':
             return self.export_to_csv(df, filename=filename)
