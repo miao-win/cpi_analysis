@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 from src.ingestion import DataImporter
 from src.compute import IndexCalculator
+from src.visualization import DataVisualizer
 
 
 def cmd_create_tables():
@@ -146,6 +147,62 @@ def cmd_run_pipeline(product_dt=None, base_date=None):
     print("=" * 60)
 
 
+def cmd_plot_total(start_date=None, end_date=None, save=None, no_show=False):
+    print("Plotting total index trend...")
+    viz = DataVisualizer()
+    date_range = viz.get_date_range()
+    print(f"Data available from {date_range['min_date']} to {date_range['max_date']}")
+    save_path = save or 'total_index_trend.png'
+    viz.plot_total_index(
+        start_date=start_date,
+        end_date=end_date,
+        save_path=save_path,
+        show=not no_show
+    )
+    print(f"Plot saved to: {viz.output_dir}/{save_path}")
+
+
+def cmd_plot_category(category_id, start_date=None, end_date=None, save=None, no_show=False):
+    print(f"Plotting category index trend for category_id={category_id}...")
+    viz = DataVisualizer()
+    save_path = save or f'category_{category_id}_index_trend.png'
+    viz.plot_category_index(
+        category_id=category_id,
+        start_date=start_date,
+        end_date=end_date,
+        save_path=save_path,
+        show=not no_show
+    )
+    print(f"Plot saved to: {viz.output_dir}/{save_path}")
+
+
+def cmd_list_categories():
+    print("Available categories:")
+    viz = DataVisualizer()
+    categories = viz.get_available_categories()
+    if not categories:
+        print("  No categories found.")
+        return
+    print(f"  {'ID':<10} {'Name':<30}")
+    print(f"  {'-'*10} {'-'*30}")
+    for cat in categories:
+        print(f"  {cat['category_id']:<10} {cat['category_name']:<30}")
+
+
+def cmd_export(format='csv', start_date=None, end_date=None, output=None):
+    print(f"Exporting index data to {format}...")
+    viz = DataVisualizer()
+    date_range = viz.get_date_range()
+    print(f"Data available from {date_range['min_date']} to {date_range['max_date']}")
+    file_path = viz.export_all_data(
+        start_date=start_date,
+        end_date=end_date,
+        format=format,
+        filename=output
+    )
+    print(f"Data exported successfully to: {file_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='High-frequency E-commerce Price Index System')
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
@@ -175,6 +232,27 @@ def main():
     pipeline_parser.add_argument('--dt', type=str, help='Snapshot date for product_full (YYYY-MM-DD)', default=None)
     pipeline_parser.add_argument('--base-date', type=str, help='Base date for index calculation (YYYY-MM-DD)', default=None)
 
+    plot_total_parser = subparsers.add_parser('plot-total', help='Plot total index trend chart')
+    plot_total_parser.add_argument('--start-date', type=str, help='Start date (YYYY-MM-DD)', default=None)
+    plot_total_parser.add_argument('--end-date', type=str, help='End date (YYYY-MM-DD)', default=None)
+    plot_total_parser.add_argument('--save', type=str, help='Output filename (default: total_index_trend.png)', default=None)
+    plot_total_parser.add_argument('--no-show', action='store_true', help='Do not display plot window')
+
+    plot_cat_parser = subparsers.add_parser('plot-category', help='Plot category index trend chart')
+    plot_cat_parser.add_argument('--category-id', type=int, required=True, help='Category ID')
+    plot_cat_parser.add_argument('--start-date', type=str, help='Start date (YYYY-MM-DD)', default=None)
+    plot_cat_parser.add_argument('--end-date', type=str, help='End date (YYYY-MM-DD)', default=None)
+    plot_cat_parser.add_argument('--save', type=str, help='Output filename', default=None)
+    plot_cat_parser.add_argument('--no-show', action='store_true', help='Do not display plot window')
+
+    subparsers.add_parser('list-categories', help='List all available categories with index data')
+
+    export_parser = subparsers.add_parser('export', help='Export index result data')
+    export_parser.add_argument('--format', type=str, choices=['csv', 'excel'], default='csv', help='Export format (default: csv)')
+    export_parser.add_argument('--start-date', type=str, help='Start date (YYYY-MM-DD)', default=None)
+    export_parser.add_argument('--end-date', type=str, help='End date (YYYY-MM-DD)', default=None)
+    export_parser.add_argument('--output', type=str, help='Output filename', default=None)
+
     args = parser.parse_args()
 
     try:
@@ -196,6 +274,30 @@ def main():
             cmd_compute_latest(base_date=args.base_date)
         elif args.command == 'run-pipeline':
             cmd_run_pipeline(product_dt=args.dt, base_date=args.base_date)
+        elif args.command == 'plot-total':
+            cmd_plot_total(
+                start_date=args.start_date,
+                end_date=args.end_date,
+                save=args.save,
+                no_show=args.no_show
+            )
+        elif args.command == 'plot-category':
+            cmd_plot_category(
+                category_id=args.category_id,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                save=args.save,
+                no_show=args.no_show
+            )
+        elif args.command == 'list-categories':
+            cmd_list_categories()
+        elif args.command == 'export':
+            cmd_export(
+                format=args.format,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                output=args.output
+            )
         else:
             parser.print_help()
     except Exception as e:

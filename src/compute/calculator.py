@@ -97,6 +97,8 @@ def _build_paasche_sql(level: str, base_date: str, dt: Optional[str] = None) -> 
         category_join = "LEFT JOIN category cm ON dp.category_id = cm.category_id"
         category_group = ", dp.category_id, cm.category"
 
+    # Paasche 指数使用当期权重，推导方式：current_weight = base_weight * (p_t / p_0)
+    # 公式: SUM(p_t^2 * w_0 / p_0) / SUM(p_t * w_0)
     sql = f"""
 INSERT INTO index_result (date, index_level, category_id, category_name, index_type, index_value, base_date)
 SELECT
@@ -105,20 +107,21 @@ SELECT
     {category_id_col},
     {category_name_col},
     'paasche' AS index_type,
-    SUM(dp.price_geom_avg * pf_curr.weight) / SUM(dp_base.price_geom_avg * pf_curr.weight) AS index_value,
+    SUM(dp.price_geom_avg * dp.price_geom_avg * pf_base.weight / dp_base.price_geom_avg)
+        / SUM(dp.price_geom_avg * pf_base.weight) AS index_value,
     toDate('{base_date}') AS base_date
 FROM {daily_prices} AS dp
-INNER JOIN product_full pf_curr
-    ON dp.product_id = pf_curr.product_id
-    AND pf_curr.dt = dp.dt
-    AND pf_curr.weight > 0
+INNER JOIN product_full pf_base
+    ON dp.product_id = pf_base.product_id
+    AND pf_base.dt = toDate('{base_date}')
+    AND pf_base.weight > 0
 INNER JOIN {daily_prices} AS dp_base
     ON dp.product_id = dp_base.product_id
     AND dp_base.dt = toDate('{base_date}')
 {category_join}
 WHERE dp.dt >= toDate('{base_date}')
 GROUP BY dp.dt{category_group}
-HAVING index_value IS NOT NULL AND isFinite(index_value) AND SUM(dp_base.price_geom_avg * pf_curr.weight) > 0
+HAVING index_value IS NOT NULL AND isFinite(index_value) AND SUM(dp.price_geom_avg * pf_base.weight) > 0
 """
     return sql
 
