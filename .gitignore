@@ -1,0 +1,64 @@
+# ===========================
+# 1. 敏感信息与密钥（打死也不能提交）
+# ===========================
+.env
+config.yaml
+*.key
+*.pem
+*secret*
+
+# ===========================
+# 2. 原始数据与输出结果（因为已存OSS，不提交）
+# ===========================
+# 忽略 data 文件夹下的所有实际数据文件
+data/
+# 但如果你想保留文件夹结构，可以手动建一个 data/.gitkeep
+# （.gitkeep 不会被这个规则忽略，前提是你没写 *.keep）
+
+# 忽略本地生成的图片、报告、临时仓库文件
+output/
+warehouse/
+tmp/
+*.log
+*.csv
+*.xlsx
+
+# ===========================
+# 3. Python 标准缓存（必须忽略）
+# ===========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# ===========================
+# 4. IDE 与操作系统（个人配置互不干扰）
+# ===========================
+.vscode/
+.claude/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===========================
+# 5. 测试与临时文件
+# ===========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
