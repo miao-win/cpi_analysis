@@ -8,7 +8,7 @@ import pandas as pd
 
 
 class DataCleaner:
-    CATEGORY_COLUMNS = ['category', 'category_id', 'hierarchy', 'weight', 'price', 'parent']
+    CATEGORY_COLUMNS = ['category_id', 'category', 'hierarchy', 'weight', 'price', 'parent']
     PRODUCT_COLUMNS = ['product_id', 'category_id', 'name', 'weight', 'price', 'change_count']
     DAILY_PRICE_COLUMNS = ['product_id', 'category_id', 'name', 'price', 'change_date']
 

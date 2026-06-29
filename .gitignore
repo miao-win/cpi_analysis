@@ -21,6 +21,7 @@ warehouse/
 tmp/
 *.log
 *.csv
+!tests/fixtures/*.csv
 *.xlsx
 
 # ===========================
